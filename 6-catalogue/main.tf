@@ -26,7 +26,7 @@ module "catalogue" {
   vpc_security_group_ids = [data.aws_ssm_parameter.catalogue_sg_id.value]
   key_name               = "bhavani"
   subnet_id              = element(split(",", data.aws_ssm_parameter.private_subnet_ids.value),0)
-  iam_instance_profile = "ShellScriptRoleForRoboshop"
+  iam_instance_profile = "Ec2role"
 
   tags = merge(
     var.common_tags,
@@ -34,97 +34,100 @@ module "catalogue" {
   )
 }
 
-# resource "null_resource" "catalogue" {
+resource "null_resource" "catalogue" {
 
-#     triggers = {
-#         instance_id = module.catalogue.id
-#     }
+    triggers = {
+        instance_id = module.catalogue.id
+    }
 
-#     connection {
-#       host = module.catalogue.private_ip
-#       type = "ssh"
-#       user = "ec2-user"
-#       private_key = file("D:/DevOps/DurgaBhavani/newyear2025/durga.pem")
-#   #password = ""
-#     }
+    connection {
+      host = module.catalogue.private_ip
+      type = "ssh"
+      user = "ec2-user"
+      private_key = file("D:/DevOps/DurgaBhavani/newyear2025/durga.pem")
+  #password = ""
+    }
 
-#     provisioner "file" {  # if we want to run any script we need to copy that file to ec2 instance so through this we can copy that file to ec2 instance
-#         source = "bootstrap.sh"
-#         destination = "/tmp/bootstrap.sh"
+    provisioner "file" {  # if we want to run any script we need to copy that file to ec2 instance so through this we can copy that file to ec2 instance
+        source = "bootstrap.sh"
+        destination = "/tmp/bootstrap.sh"
       
-#     }
+    }
 
-#     provisioner "remote-exec" { 
+    provisioner "remote-exec" { 
         
-#         inline = [ 
-#             "chmod +x /tmp/bootstrap.sh",
-#             # "/tmp/bootstrap.sh catalogue dev",
-#          ]
+        inline = [ 
+            "chmod +x /tmp/bootstrap.sh",
+            "sudo /tmp/bootstrap.sh",
+            # "/tmp/bootstrap.sh catalogue dev",
+         ]
       
-#     }
+    }
 
 
   
-# }
+}
 
 ### TO STOP THE INSTANCE THROUGH TERRAFORM ###
 
-# resource "aws_ec2_instance_state" "catalogue" {
+resource "aws_ec2_instance_state" "catalogue" {
 
-#   instance_id = module.catalogue.id
-#   state = "stopped"
-#   depends_on = [ null_resource.catalogue ]
+  instance_id = module.catalogue.id
+  state = "stopped"
+  depends_on = [ null_resource.catalogue ]
   
-# }
+}
 
-# ### TO GET THE AMI ID OF OUR CREATED INSTANCE ###
+### TO GET THE AMI ID OF OUR CREATED INSTANCE ###
 
-# resource "aws_ami_from_instance" "catalogue" {
-#   name = "${local.name}-${var.tags.Component}-${local.current_time}"
-#   source_instance_id = module.catalogue.id
-  
-# }
+resource "aws_ami_from_instance" "catalogue" {
+  name               = "${local.name}-${var.tags.Component}-${local.current_time}"
+  source_instance_id = module.catalogue.id
+  depends_on = [ aws_ec2_instance_state.catalogue ]
+}
+
 
 
 # ### TO TERMINATE THE INSTANCE THROUGH TERRAFORM ###
 
-# resource "null_resource" "catalogu-delete" {
+resource "null_resource" "catalogu-delete" {
 
-#     triggers = {
-#         instance_id = aws_ami_from_instance.catalogue.id
-#     }
-
-
-
-#     provisioner "local-exec" {
-
-#       command = "aws ec2 terminate-instances --instance-ids ${module.catalogue.id}"
-
-#       }
-
-#       depends_on = [ aws_ami_from_instance.catalogue, null_resource.catalogue ]
+    triggers = {
+        instance_id = module.catalogue.id
+    }
 
 
-#     }
 
-# resource "aws_launch_template" "catalogue" {
-#   name = "${local.name}-${var.tags.Component}"
+    provisioner "local-exec" {
 
-#   image_id = aws_ami_from_instance.catalogue.id
-#   instance_initiated_shutdown_behavior = "terminate"
-#   instance_type = "t2.micro"
-#   vpc_security_group_ids = [data.aws_ssm_parameter.catalogue_sg_id.value]
+      command = "aws ec2 terminate-instances --instance-ids ${module.catalogue.id}"
 
-#   tag_specifications {
+      }
 
-#     resource_type = "instance"
+      depends_on = [ aws_ami_from_instance.catalogue ]
 
-#     tags = {
 
-#       Name ="${local.name}-${var.tags.Component}"
-#     }
+    }
+
+resource "aws_launch_template" "catalogue" {
+  name = "${local.name}-${var.tags.Component}"
+
+  image_id = aws_ami_from_instance.catalogue.id
+  instance_initiated_shutdown_behavior = "terminate"
+  instance_type = "t2.micro"
+  update_default_version = true
+  vpc_security_group_ids = [data.aws_ssm_parameter.catalogue_sg_id.value]
+
+  tag_specifications {
+
+    resource_type = "instance"
+
+    tags = {
+
+      Name ="${local.name}-${var.tags.Component}"
+    }
     
-#   }
+  }
   
-# }
+}
 
