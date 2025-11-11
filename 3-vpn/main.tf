@@ -6,7 +6,12 @@ module "vpn" {
   vpc_security_group_ids = [data.aws_ssm_parameter.vpn_sg_id.value]
   key_name               = "bhavani"
   subnet_id              = data.aws_subnet.selected.id
-  user_data = file("openvpn.sh")
+  user_data = <<-EOF
+        #!/bin/bash
+        sudo su
+        yum install git -y
+        yum install ansible -y
+      EOF
   
   tags = merge(
     var.common_tags,
@@ -17,4 +22,15 @@ module "vpn" {
       Name = "${local.ec2_name}-vpn"
     }
   )
+
+ 
+
+
+ 
 }
+
+
+
+
+
+

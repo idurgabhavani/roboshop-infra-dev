@@ -1,4 +1,4 @@
-resource "aws_alb_target_group" "catalogue" {
+resource "aws_alb_target_group" "web" {
     name = "${local.name}-${var.tags.Component}"
     port = 8080
     protocol = "HTTP"
@@ -11,7 +11,7 @@ resource "aws_alb_target_group" "catalogue" {
       unhealthy_threshold = 3
       timeout = 5
       path = "/health"
-      port = 8080
+      port = 80
       matcher = "200-299"
 
     }
@@ -19,12 +19,12 @@ resource "aws_alb_target_group" "catalogue" {
   
 }
 
-module "catalogue" {
+module "web" {
   source                 = "terraform-aws-modules/ec2-instance/aws"
   ami                    = "ami-0341d95f75f311023"
-  name                   = "${local.name}-catalogue"
+  name                   = "${local.name}-web"
   instance_type          = "t2.small"
-  vpc_security_group_ids = [data.aws_ssm_parameter.catalogue_sg_id.value]
+  vpc_security_group_ids = [data.aws_ssm_parameter.web_sg_id.value]
   key_name               = "bhavani"
   subnet_id              = element(split(",", data.aws_ssm_parameter.private_subnet_ids.value),0)
   iam_instance_profile = "Ec2role"
@@ -35,89 +35,93 @@ module "catalogue" {
   )
 }
 
-resource "null_resource" "catalogue" {
+resource "null_resource" "web" {
 
     triggers = {
-        instance_id = module.catalogue.id
+        instance_id = module.web.id
     }
 
     connection {
-      host = module.catalogue.private_ip
+      host = module.web.private_ip
       type = "ssh"
       user = "ec2-user"
       private_key = file("D:/DevOps/DurgaBhavani/newyear2025/durga.pem")
   #password = ""
     }
 
-    provisioner "file" {  # if we want to run any script we need to copy that file to ec2 instance so through this we can copy that file to ec2 instance
-        source = "bootstrap.sh"
-        destination = "/tmp/bootstrap.sh"
+    # provisioner "file" {  # if we want to run any script we need to copy that file to ec2 instance so through this we can copy that file to ec2 instance
+    #     source = "bootstrap.sh"
+    #     destination = "/tmp/bootstrap.sh"
       
-    }
+    # }
 
     provisioner "remote-exec" { 
         
         inline = [ 
-            "chmod +x /tmp/bootstrap.sh",
-            "sudo /tmp/bootstrap.sh",
-            # "/tmp/bootstrap.sh catalogue dev",
+             "sudo yum install nginx -y",
+             "sudo systemctl start nginx",
+             "touch yes.txt"
+
          ]
       
     }
 
 
+
   
 }
 
-### TO STOP THE INSTANCE THROUGH TERRAFORM ###
 
-resource "aws_ec2_instance_state" "catalogue" {
+## TO STOP THE INSTANCE THROUGH TERRAFORM ###
 
-  instance_id = module.catalogue.id
+resource "aws_ec2_instance_state" "web" {
+
+  instance_id = module.web.id
   state = "stopped"
-  depends_on = [ null_resource.catalogue ]
+  depends_on = [ null_resource.web ]
   
 }
 
 ### TO GET THE AMI ID OF OUR CREATED INSTANCE ###
 
-resource "aws_ami_from_instance" "catalogue" {
+resource "aws_ami_from_instance" "web" {
   name               = "${local.name}-${var.tags.Component}-${local.current_time}"
-  source_instance_id = module.catalogue.id
-  depends_on = [ aws_ec2_instance_state.catalogue ]
+  source_instance_id = module.web.id
+  depends_on = [ aws_ec2_instance_state.web ]
 }
 
 
 
 # ### TO TERMINATE THE INSTANCE THROUGH TERRAFORM ###
 
-resource "null_resource" "catalogu-delete" {
+resource "null_resource" "web-delete" {
 
     triggers = {
-        instance_id = module.catalogue.id
+        instance_id = module.web.id
     }
 
 
 
     provisioner "local-exec" {
 
-      command = "aws ec2 terminate-instances --instance-ids ${module.catalogue.id}"
+      command = "aws ec2 terminate-instances --instance-ids ${module.web.id}"
 
       }
 
-      depends_on = [ aws_ami_from_instance.catalogue ]
+      depends_on = [ aws_ami_from_instance.web ]
 
 
     }
 
-resource "aws_launch_template" "catalogue" {
+
+resource "aws_launch_template" "web" {
   name = "${local.name}-${var.tags.Component}"
 
-  image_id = aws_ami_from_instance.catalogue.id
+  image_id = aws_ami_from_instance.web.id
   instance_initiated_shutdown_behavior = "terminate"
   instance_type = "t2.micro"
   update_default_version = true
-  vpc_security_group_ids = [data.aws_ssm_parameter.catalogue_sg_id.value]
+  vpc_security_group_ids = [data.aws_ssm_parameter.web_sg_id.value]
 
   tag_specifications {
 
@@ -132,7 +136,8 @@ resource "aws_launch_template" "catalogue" {
   
 }
 
-resource "aws_autoscaling_group" "catalogue" {
+
+resource "aws_autoscaling_group" "web" {
   name = "${local.name}-${var.tags.Component}"
   max_size = 10
   min_size = 1
@@ -140,11 +145,11 @@ resource "aws_autoscaling_group" "catalogue" {
   health_check_type = "ELB"
   desired_capacity = 2
   vpc_zone_identifier = split(",", data.aws_ssm_parameter.private_subnet_ids.value)
-  target_group_arns = [ aws_alb_target_group.catalogue.arn ]
+  target_group_arns = [ aws_alb_target_group.web.arn ]
 
   launch_template {
-    id = aws_launch_template.catalogue.id
-    version = aws_launch_template.catalogue.latest_version
+    id = aws_launch_template.web.id
+    version = aws_launch_template.web.latest_version
   }
 
   instance_refresh {
@@ -173,27 +178,28 @@ resource "aws_autoscaling_group" "catalogue" {
 
 }
 
-resource "aws_lb_listener_rule" "catalogue" {
 
-  listener_arn = data.aws_ssm_parameter.app_alb_listener_arn
+resource "aws_lb_listener_rule" "web" {
+
+  listener_arn = data.aws_ssm_parameter.web_alb_listener_arn.value
   priority = 10
 
   action {
     type = "forward"
-    target_group_arn = aws_alb_target_group.catalogue.arn
+    target_group_arn = aws_alb_target_group.web.arn
   }
 
   condition {
     host_header {
-      values = ["${var.tags.Component}.app-${var.environment}"]#.${var.zone_name}
+      values = ["${var.tags.Component}-${var.environment}"]#.${var.zone_name}
     }
   }
   
 }
 
 
-resource "aws_autoscaling_policy" "catalogue" {
-  autoscaling_group_name = aws_autoscaling_group.catalogue.name
+resource "aws_autoscaling_policy" "web" {
+  autoscaling_group_name = aws_autoscaling_group.web.name
   name                   = "${local.name}-${var.tags.Component}"
   policy_type            = "TargetTrackingScaling"
 
