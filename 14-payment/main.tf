@@ -9,4 +9,5 @@ module "user" {
     common_tags = var.common_tags
     tags = var.tags
     app_alb_listener_arn = data.aws_ssm_parameter.app_alb_listener_arn.value
+    rule_priority = 40
 }

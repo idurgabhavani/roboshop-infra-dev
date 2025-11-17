@@ -412,14 +412,25 @@ resource "aws_security_group_rule" "cart_vpn" {
   security_group_id        = module.cart.sg_id
 }
 
-resource "aws_security_group_rule" "cart_web" {
-  source_security_group_id = module.web.sg_id
+# resource "aws_security_group_rule" "cart_web" {
+#   source_security_group_id = module.web.sg_id
+#   type                     = "ingress"
+#   from_port                = 8080
+#   to_port                  = 8080
+#   protocol                 = "tcp"
+#   security_group_id        = module.cart.sg_id
+# }
+
+resource "aws_security_group_rule" "cart_app_alb" {
+  source_security_group_id = module.app_alb.sg_id
   type                     = "ingress"
   from_port                = 8080
   to_port                  = 8080
   protocol                 = "tcp"
   security_group_id        = module.cart.sg_id
 }
+
+
 
 resource "aws_security_group_rule" "cart_shipping" {
   source_security_group_id = module.shipping.sg_id
@@ -448,14 +459,23 @@ resource "aws_security_group_rule" "shipping_vpn" {
   security_group_id        = module.shipping.sg_id
 }
 
-resource "aws_security_group_rule" "shipping_web" {
-  source_security_group_id = module.web.sg_id
+resource "aws_security_group_rule" "shipping_app_alb" {
+  source_security_group_id = module.app_alb.sg_id
   type                     = "ingress"
-  from_port                = 8080
-  to_port                  = 8080
+  from_port                = 22
+  to_port                  = 22
   protocol                 = "tcp"
   security_group_id        = module.shipping.sg_id
 }
+
+# resource "aws_security_group_rule" "shipping_app_alb" {
+#   source_security_group_id = module.web.sg_id
+#   type                     = "ingress"
+#   from_port                = 8080
+#   to_port                  = 8080
+#   protocol                 = "tcp"
+#   security_group_id        = module.shipping.sg_id
+# }
 
 resource "aws_security_group_rule" "payment_vpn" {
   source_security_group_id = module.vpn.sg_id
@@ -466,14 +486,28 @@ resource "aws_security_group_rule" "payment_vpn" {
   security_group_id        = module.payment.sg_id
 }
 
-resource "aws_security_group_rule" "payment_web" {
-  source_security_group_id = module.web.sg_id
+# resource "aws_security_group_rule" "payment_web" {
+#   source_security_group_id = module.web.sg_id
+#   type                     = "ingress"
+#   from_port                = 8080
+#   to_port                  = 8080
+#   protocol                 = "tcp"
+#   security_group_id        = module.payment.sg_id
+# }   
+
+#### payment , user , shipping and cart all these now accepting  connections from app alb
+
+
+
+resource "aws_security_group_rule" "payment_app_alb" {
+  source_security_group_id = module.app_alb.sg_id
   type                     = "ingress"
   from_port                = 8080
   to_port                  = 8080
   protocol                 = "tcp"
   security_group_id        = module.payment.sg_id
 }
+
 
 resource "aws_security_group_rule" "web_vpn" {
   source_security_group_id = module.vpn.sg_id
