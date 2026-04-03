@@ -1,5 +1,11 @@
 pipeline{
-    agent any
+
+    agent {
+        node {
+            label 'agent-1'
+        }
+    }
+    // agent any
     // {
     //     node {
     //         label 'agent-1'
@@ -11,7 +17,9 @@ pipeline{
     // }
     // options {
     //     timeout(time: 1, unit: 'SECONDS')
-    //     disableConcurrentBuild()  // this will stops if again and again building the same pipelins
+    //     disableConcurrentBuild()
+    //   // this will sxtops if again and again building the same pipelins
+           // ansiColor('Xterm') >> to enable colours in jenkins
     // }
 
     stages{
@@ -19,7 +27,7 @@ pipeline{
             steps {
                 sh """
 
-                cd 01-vpc
+                cd 1-vpc
                 terrraform init -reconfigure
 
                 """
@@ -30,7 +38,7 @@ pipeline{
             steps {
                 sh """
 
-                cd 01-vpc
+                cd 1-vpc
                 terrraform plan
 
                 """
@@ -45,7 +53,7 @@ pipeline{
                 steps {
                     sh """
 
-                    cd 01-vpc
+                    cd 1-vpc
                     terraform apply -auto-approve
 
                     """
