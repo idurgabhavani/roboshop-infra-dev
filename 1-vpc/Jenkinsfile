@@ -22,6 +22,16 @@ pipeline{
            // ansiColor('Xterm') >> to enable colours in jenkins
     // }
 
+    options {
+        ansiColor('xterm')
+
+    }
+
+    parameters {
+
+        choice(name: 'action',choices: ['apply','destroy'],description: 'pick something')
+    }
+
     stages{
         stage('Init') {
             steps {
@@ -45,6 +55,13 @@ pipeline{
             }
         }
         stage('Deploy') {
+            when {
+               expression{
+                    params.action == 'apply'
+                   
+
+                }
+            }
             input {
                 message "Should we continue"
                 ok "yes ,we should "
@@ -63,6 +80,32 @@ pipeline{
                 
             }
         }
+        stage('Destroy') {
+            when {
+               expression{
+                    params.action == 'destroy'
+                   
+
+                }
+            }
+            input {
+                message "Should we continue"
+                ok "yes ,we should "
+            }
+            steps {
+                steps {
+                    sh """
+
+                    cd 1-vpc
+                    terraform destroy -auto-approve
+
+                    """
+
+
+                }
+                
+            }
+
         
     }
 }
