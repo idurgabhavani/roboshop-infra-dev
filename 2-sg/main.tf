@@ -1,6 +1,6 @@
 
 module "vpn" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for mongodb"
@@ -13,7 +13,7 @@ module "vpn" {
 
 
 module "mongodb" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for mongodb"
@@ -25,7 +25,7 @@ module "mongodb" {
 }
 
 module "redis" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for redis"
@@ -37,7 +37,7 @@ module "redis" {
 }
 
 module "mysql" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for mysql"
@@ -50,7 +50,7 @@ module "mysql" {
 
 
 module "rabbitmq" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for rabbitmq"
@@ -62,7 +62,7 @@ module "rabbitmq" {
 }
 
 module "catalogue" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for catalogue"
@@ -75,7 +75,7 @@ module "catalogue" {
 }
 
 module "user" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for user"
@@ -88,7 +88,7 @@ module "user" {
 }
 
 module "cart" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for cart"
@@ -101,7 +101,7 @@ module "cart" {
 }
 
 module "shipping" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for shipping"
@@ -114,7 +114,7 @@ module "shipping" {
 }
 
 module "payment" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for payment"
@@ -125,7 +125,7 @@ module "payment" {
 }
 
 module "web" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for web"
@@ -137,7 +137,7 @@ module "web" {
 
 
 module "app_alb" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for app_alb"
@@ -149,7 +149,7 @@ module "app_alb" {
 
 
 module "web_alb" {
-    source = "../../terraform-aws-security-group"
+    source = "git::https://github.com/idurgabhavani/terraform-aws-security-group.git?ref=master"
     project_name = var.project_name
     environment = var.environment
     sg_description = "Security group for web_alb"
